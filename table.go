@@ -164,9 +164,3 @@ func (s Subquery) RightJoin(target TableReference) *JoinBuilder {
 		typ:   "RIGHT JOIN",
 	}
 }
-
-type Union struct {
-	left  QueryBuilder
-	typ   string
-	right QueryBuilder
-}

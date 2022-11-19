@@ -53,9 +53,13 @@ func (d *mysqlDialect) buildOnConflict(b *Builder, odk *OnConflict) error {
 		}
 		switch a := assign.(type) {
 		case Assignment:
-			return b.buildAssignment(a)
+			if err := b.buildAssignment(a); err != nil {
+				return err
+			}
 		case Column:
-			return d.buildConflictColumn(b, a)
+			if err := d.buildConflictColumn(b, a); err != nil {
+				return err
+			}
 		default:
 			return errs.NewErrUnsupportedAssignableType(assign)
 		}
@@ -155,9 +159,13 @@ func (d *sqlite3Dialect) buildOnConflict(b *Builder, odk *OnConflict) error {
 		}
 		switch a := assign.(type) {
 		case Assignment:
-			return b.buildAssignment(a)
+			if err := b.buildAssignment(a); err != nil {
+				return err
+			}
 		case Column:
-			return d.buildConflictColumn(b, a)
+			if err := d.buildConflictColumn(b, a); err != nil {
+				return err
+			}
 		default:
 			return errs.NewErrUnsupportedAssignableType(assign)
 		}

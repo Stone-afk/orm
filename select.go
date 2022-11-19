@@ -91,6 +91,61 @@ func (s *Selector[T]) From(tbl TableReference) *Selector[T] {
 	return s
 }
 
+func (s *Selector[T]) AsSubquery(alias string) Subquery {
+	table := s.table
+	if table == nil {
+		table = TableOf(new(T))
+	}
+	return Subquery{
+		s:       s,
+		alias:   alias,
+		columns: s.columns,
+		table:   table,
+	}
+}
+
+type Union struct {
+	left  QueryBuilder
+	typ   string
+	right QueryBuilder
+}
+
+func (u *Union) Build() (*Query, error) {
+	return &Query{}, nil
+}
+
+func (s *Selector[T]) Union(q QueryBuilder) *Union {
+	return &Union{
+		left:  s,
+		typ:   "UNION",
+		right: q,
+	}
+}
+
+func (s *Selector[T]) UnionAll(q QueryBuilder) *Union {
+	return &Union{
+		left:  s,
+		typ:   "UNION ALL",
+		right: q,
+	}
+}
+
+func (u *Union) Union(q QueryBuilder) *Union {
+	return &Union{
+		left:  u,
+		typ:   "UNION",
+		right: q,
+	}
+}
+
+func (u *Union) UnionAll(q QueryBuilder) *Union {
+	return &Union{
+		left:  u,
+		typ:   "UNION ALL",
+		right: q,
+	}
+}
+
 func (s *Selector[T]) buildColumns() error {
 	if len(s.columns) == 0 {
 		s.writeByte('*')
@@ -197,19 +252,6 @@ func (s *Selector[T]) buildJoin(join Join) error {
 	}
 	s.writeRightParenthesis()
 	return nil
-}
-
-func (s *Selector[T]) AsSubquery(alias string) Subquery {
-	table := s.table
-	if table == nil {
-		table = TableOf(new(T))
-	}
-	return Subquery{
-		s:       s,
-		alias:   alias,
-		columns: s.columns,
-		table:   table,
-	}
 }
 
 func (s *Selector[T]) buildTable(table TableReference) error {

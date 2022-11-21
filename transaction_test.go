@@ -17,7 +17,7 @@ func TestTx_Commit(t *testing.T) {
 	}
 	defer func() { _ = mockDB.Close() }()
 
-	db, err := OpenDB(mockDB)
+	db, err := OpenDB("mysql", mockDB)
 	if err != nil {
 		// t.Fatal: 不单报告单元测试已经失败，而且会向测试输出写入一些消息，
 		// 然后立刻停止这个测试函数的执行（如果还有其他的测试函数，会继续执行其他的测试函数）
@@ -46,7 +46,7 @@ func TestTx_Rollback(t *testing.T) {
 	}
 	defer func() { _ = mockDB.Close() }()
 
-	db, err := OpenDB(mockDB)
+	db, err := OpenDB("mysql", mockDB)
 	if err != nil {
 		t.Fatal(err)
 	}

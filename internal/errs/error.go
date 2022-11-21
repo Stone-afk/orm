@@ -67,3 +67,8 @@ func NewErrUnknownColumn(name string) error {
 func NewErrUnsupportedSelectable(exp any) error {
 	return fmt.Errorf("orm: 不支持的目标列 %v", exp)
 }
+
+// NewUnsupportedDriverError 不支持驱动类型
+func NewUnsupportedDriverError(driver string) error {
+	return fmt.Errorf("orm: 不支持driver类型 %s", driver)
+}

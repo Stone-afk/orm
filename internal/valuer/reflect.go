@@ -45,16 +45,24 @@ func (u *reflectValue) SetColumns(rows *sql.Rows) error {
 
 	colValues := make([]any, 0, len(cols))
 	colElemVals := make([]reflect.Value, 0, len(cols))
-	for _, col := range cols {
-		fd, ok := u.meta.ColumnMap[col]
-		if !ok {
-			return errs.NewErrUnknownColumn(col)
-		}
-		// fd.Type 是 int，那么  reflect.New(fd.typ) 是 *int
-		fdVal := reflect.New(fd.Type)
-		colElemVals = append(colElemVals, fdVal.Elem())
 
-		// 因为 Scan 要指针，所以在这里，不需要调用 Elem
+	switch u.val.Kind() {
+	case reflect.Struct:
+		for _, col := range cols {
+			fd, ok := u.meta.ColumnMap[col]
+			if !ok {
+				return errs.NewErrUnknownColumn(col)
+			}
+			// fd.Type 是 int，那么  reflect.New(fd.typ) 是 *int
+			fdVal := reflect.New(fd.Type)
+			colElemVals = append(colElemVals, fdVal.Elem())
+
+			// 因为 Scan 要指针，所以在这里，不需要调用 Elem
+			colValues = append(colValues, fdVal.Interface())
+		}
+	default:
+		fdVal := reflect.New(u.val.Type())
+		colElemVals = append(colElemVals, fdVal.Elem())
 		colValues = append(colValues, fdVal.Interface())
 	}
 
@@ -74,8 +82,12 @@ func (u *reflectValue) SetColumns(rows *sql.Rows) error {
 	//}
 
 	for i, col := range cols {
-		fd := u.meta.ColumnMap[col]
-		u.val.FieldByName(fd.GoName).Set(colElemVals[i])
+		if u.val.Kind() == reflect.Struct {
+			fd := u.meta.ColumnMap[col]
+			u.val.FieldByName(fd.GoName).Set(colElemVals[i])
+		} else {
+			u.val.Set(colElemVals[i])
+		}
 	}
 
 	return nil

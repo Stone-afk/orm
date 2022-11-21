@@ -20,6 +20,17 @@ type Dialect interface {
 	buildOnConflict(b *Builder, odk *OnConflict) error
 }
 
+func dialectOf(driver string) (Dialect, error) {
+	switch driver {
+	case "sqlite3":
+		return SQLite3, nil
+	case "mysql":
+		return MySQL, nil
+	default:
+		return nil, errs.NewUnsupportedDriverError(driver)
+	}
+}
+
 type standardSQL struct{}
 
 func (d *standardSQL) quoter() byte {

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"orm/internal/errs"
 	"orm/internal/valuer"
 	"testing"
@@ -721,13 +722,60 @@ func TestSelector_Build(t *testing.T) {
 	}
 }
 
+func TestSelector_Get_baseType(t *testing.T) {
+	//mockDB, mock, err := sqlmock.New()
+	mockDB, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = mockDB.Close() }()
+	db, err := OpenDB("mysql", mockDB)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	testCases := []struct {
+		name      string
+		queryRes  func(t *testing.T) any
+		mockErr   error
+		mockOrder func(mock sqlmock.Sqlmock)
+		wantErr   error
+		wantVal   any
+	}{
+
+		// 返回原生基本类型
+		{
+			name: "avg res int",
+			queryRes: func(t *testing.T) any {
+				queryer := NewSelector[int](db).Select(Avg("Age")).From(TableOf(&TestModel{}))
+				result, err := queryer.Get(context.Background())
+				require.NoError(t, err)
+				return result
+			},
+			mockOrder: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery("SELECT AVG(`age`) FROM `test_model`;").WithArgs().
+					WillReturnRows(mock.NewRows([]string{"10"}))
+			},
+			wantVal: int(10),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.mockOrder(mock)
+			res := tc.queryRes(t)
+			assert.Equal(t, tc.wantVal, res)
+		})
+	}
+}
+
 func TestSelector_Get(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer func() { _ = mockDB.Close() }()
-	db, err := OpenDB(mockDB)
+	db, err := OpenDB("mysql", mockDB)
 	if err != nil {
 		t.Fatal(err)
 	}

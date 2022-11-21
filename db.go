@@ -138,13 +138,17 @@ func Open(driver string, dsn string, opts ...DBOption) (*DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	return OpenDB(db, opts...)
+	return OpenDB(driver, db, opts...)
 }
 
-func OpenDB(db *sql.DB, opts ...DBOption) (*DB, error) {
+func OpenDB(driver string, db *sql.DB, opts ...DBOption) (*DB, error) {
+	dl, err := dialectOf(driver)
+	if err != nil {
+		return nil, err
+	}
 	res := &DB{
 		core: core{
-			dialect:    MySQL,
+			dialect:    dl,
 			r:          model.NewRegistry(),
 			valCreator: valuer.NewReflectValue,
 		},

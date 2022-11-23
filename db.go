@@ -37,11 +37,17 @@ func DBWithRegistry(r model.Registry) DBOption {
 	}
 }
 
-func DBUseUnsafeValuer() DBOption {
+func DBWithValCreator(c valuer.Creator) DBOption {
 	return func(db *DB) {
-		db.valCreator = valuer.NewUnsafeValue
+		db.valCreator = valuer.BasicTypeCreator{Creator: c}
 	}
 }
+
+//func DBUseUnsafeValuer() DBOption {
+//	return func(db *DB) {
+//		db.valCreator = valuer.NewUnsafeValue
+//	}
+//}
 
 // Wait 会等待数据库连接
 // 注意只能用于测试
@@ -146,11 +152,15 @@ func OpenDB(driver string, db *sql.DB, opts ...DBOption) (*DB, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	res := &DB{
 		core: core{
-			dialect:    dl,
-			r:          model.NewRegistry(),
-			valCreator: valuer.NewReflectValue,
+			dialect: dl,
+			r:       model.NewRegistry(),
+			// 可以设为默认，因为原本这里也有默认
+			valCreator: valuer.BasicTypeCreator{
+				Creator: valuer.NewReflectValue,
+			},
 		},
 		db: db,
 	}

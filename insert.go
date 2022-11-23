@@ -118,7 +118,7 @@ func (i *Inserter[T]) Build() (*Query, error) {
 		if vIdx > 0 {
 			i.writeComma()
 		}
-		refVal := i.valCreator(val, i.model)
+		refVal := i.valCreator.NewBasicTypeValue(val, i.model)
 		i.writeLeftParenthesis()
 		for fIdx, fd := range fields {
 			if fIdx > 0 {

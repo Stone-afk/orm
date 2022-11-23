@@ -11,9 +11,9 @@ import (
 type core struct {
 	dbName     string
 	r          model.Registry
-	valCreator valuer.Creator
 	dialect    Dialect
 	ms         []Middleware
+	valCreator valuer.BasicTypeCreator
 }
 
 func getMultiHandler[T any](ctx context.Context, c core,
@@ -38,7 +38,7 @@ func getMultiHandler[T any](ctx context.Context, c core,
 	for rows.Next() {
 		tp := new(T)
 		// 在这里灵活切换反射或者 unsafe
-		val := c.valCreator(tp, qc.Meta)
+		val := c.valCreator.NewBasicTypeValue(tp, qc.Meta)
 		err = val.SetColumns(rows)
 		if err != nil {
 			return &QueryResult{Err: err}
@@ -88,7 +88,8 @@ func getHandler[T any](ctx context.Context, c core,
 	tp := new(T)
 
 	// 在这里灵活切换反射或者 unsafe
-	val := c.valCreator(tp, qc.Meta)
+	// 这里使用 BasicTypeValue 的 NewBasicTypeValue
+	val := c.valCreator.NewBasicTypeValue(tp, qc.Meta)
 	err = val.SetColumns(rows)
 	return &QueryResult{Result: tp, Err: err}
 }

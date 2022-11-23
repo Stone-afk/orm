@@ -724,7 +724,8 @@ func TestSelector_Build(t *testing.T) {
 
 func TestSelector_Get_baseType(t *testing.T) {
 	//mockDB, mock, err := sqlmock.New()
-	mockDB, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+	mockDB, mock, err := sqlmock.New(
+		sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -742,7 +743,6 @@ func TestSelector_Get_baseType(t *testing.T) {
 		wantErr   error
 		wantVal   any
 	}{
-
 		// 返回原生基本类型
 		{
 			name: "avg res int",
@@ -753,10 +753,11 @@ func TestSelector_Get_baseType(t *testing.T) {
 				return result
 			},
 			mockOrder: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery("SELECT AVG(`age`) FROM `test_model`;").WithArgs().
-					WillReturnRows(mock.NewRows([]string{"10"}))
+				rows := mock.NewRows([]string{"age"}).AddRow(10)
+				mock.ExpectQuery("SELECT AVG(`age`) FROM `test_model`;").
+					WillReturnRows(rows)
 			},
-			wantVal: int(10),
+			wantVal: 10,
 		},
 	}
 
@@ -885,7 +886,9 @@ func BenchmarkQuerier_Get(b *testing.B) {
 	}
 
 	b.Run("unsafe", func(b *testing.B) {
-		db.valCreator = valuer.NewUnsafeValue
+		db.valCreator = valuer.BasicTypeCreator{
+			Creator: valuer.NewUnsafeValue,
+		}
 		for i := 0; i < b.N; i++ {
 			_, err = NewSelector[TestModel](db).Get(context.Background())
 			if err != nil {
@@ -895,7 +898,9 @@ func BenchmarkQuerier_Get(b *testing.B) {
 	})
 
 	b.Run("reflect", func(b *testing.B) {
-		db.valCreator = valuer.NewReflectValue
+		db.valCreator = valuer.BasicTypeCreator{
+			Creator: valuer.NewReflectValue,
+		}
 		for i := 0; i < b.N; i++ {
 			_, err = NewSelector[TestModel](db).Get(context.Background())
 			if err != nil {

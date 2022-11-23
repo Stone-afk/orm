@@ -57,7 +57,7 @@ func (u *Updater[T]) Build() (*Query, error) {
 	if len(u.assigns) == 0 {
 		return nil, errs.ErrNoUpdatedColumns
 	}
-	refVal := u.valCreator(u.table, u.model)
+	refVal := u.valCreator.NewBasicTypeValue(u.table, u.model)
 	u.writeSpace()
 	u.writeString("SET")
 	u.writeSpace()

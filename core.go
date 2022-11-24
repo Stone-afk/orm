@@ -91,6 +91,7 @@ func getHandler[T any](ctx context.Context, c core,
 	// 这里使用 BasicTypeValue 的 NewBasicTypeValue
 	val := c.valCreator.NewBasicTypeValue(tp, qc.Meta)
 	err = val.SetColumns(rows)
+
 	return &QueryResult{Result: tp, Err: err}
 }
 

@@ -72,3 +72,13 @@ func NewErrUnsupportedSelectable(exp any) error {
 func NewUnsupportedDriverError(driver string) error {
 	return fmt.Errorf("orm: 不支持driver类型 %s", driver)
 }
+
+// 后面可以考虑支持错误码
+// func NewErrUnsupportedExpressionType(exp any) error {
+// 	return fmt.Errorf("orm-50001: 不支持的表达式 %v", exp)
+// }
+
+// 后面还可以考虑用 AST 分析源码，生成错误排除手册，例如
+// @ErrUnsupportedExpressionType 40001
+// 发生该错误，主要是因为传入了不支持的 Expression 的实际类型
+// 一般来说，这是因为中间件

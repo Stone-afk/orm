@@ -18,6 +18,7 @@ type Registry interface {
 
 type registry struct {
 	lock   sync.RWMutex
+	once   sync.Once
 	models map[reflect.Type]*Model
 }
 
@@ -26,6 +27,7 @@ func NewRegistry() Registry {
 }
 
 func (r *registry) Register(val any, opts ...Option) (*Model, error) {
+	r.initModel()
 	m, err := r.parseModel(val)
 	if err != nil {
 		return nil, err
@@ -41,6 +43,14 @@ func (r *registry) Register(val any, opts ...Option) (*Model, error) {
 	typ := reflect.TypeOf(val)
 	r.models[typ] = m
 	return m, nil
+}
+
+func (r *registry) initModel() {
+	r.once.Do(func() {
+		if r.models == nil {
+			r.models = make(map[reflect.Type]*Model, 16)
+		}
+	})
 }
 
 // Get 查找元数据模型

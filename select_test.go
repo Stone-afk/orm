@@ -843,14 +843,16 @@ func TestSelector_Get_baseType(t *testing.T) {
 		{
 			name: "res byte",
 			queryRes: func(t *testing.T) any {
-				queryer := NewSelector[byte](db).Select(C("FirstName")).From(TableOf(&TestModel{}))
+				queryer := NewSelector[byte](db).Select(C("FirstName")).
+					From(TableOf(&TestModel{})).Where(C("Id").EQ(1))
 				result, err := queryer.Get(context.Background())
 				require.NoError(t, err)
 				return result
 			},
 			mockOrder: func(mock sqlmock.Sqlmock) {
 				rows := mock.NewRows([]string{"first_name"}).AddRow('D')
-				mock.ExpectQuery("SELECT `first_name` FROM `test_model`;").
+				mock.ExpectQuery("SELECT `first_name` FROM `test_model` WHERE `id` = ?;").
+					WithArgs(1).
 					WillReturnRows(rows)
 			},
 			wantVal: func() *byte {
@@ -862,14 +864,16 @@ func TestSelector_Get_baseType(t *testing.T) {
 		{
 			name: "res bytes",
 			queryRes: func(t *testing.T) any {
-				queryer := NewSelector[[]byte](db).Select(C("FirstName")).From(TableOf(&TestModel{}))
+				queryer := NewSelector[[]byte](db).Select(C("FirstName")).
+					From(TableOf(&TestModel{})).Where(C("Id").EQ(1))
 				result, err := queryer.Get(context.Background())
 				require.NoError(t, err)
 				return result
 			},
 			mockOrder: func(mock sqlmock.Sqlmock) {
 				rows := mock.NewRows([]string{"first_name"}).AddRow([]byte("Li"))
-				mock.ExpectQuery("SELECT `first_name` FROM `test_model`;").
+				mock.ExpectQuery("SELECT `first_name` FROM `test_model` WHERE `id` = ?;").
+					WithArgs(1).
 					WillReturnRows(rows)
 			},
 			wantVal: func() *[]byte {
@@ -881,14 +885,16 @@ func TestSelector_Get_baseType(t *testing.T) {
 		{
 			name: "res string",
 			queryRes: func(t *testing.T) any {
-				queryer := NewSelector[string](db).Select(C("FirstName")).From(TableOf(&TestModel{}))
+				queryer := NewSelector[string](db).Select(C("FirstName")).
+					From(TableOf(&TestModel{})).Where(C("Id").EQ(1))
 				result, err := queryer.Get(context.Background())
 				require.NoError(t, err)
 				return result
 			},
 			mockOrder: func(mock sqlmock.Sqlmock) {
 				rows := mock.NewRows([]string{"first_name"}).AddRow("Da")
-				mock.ExpectQuery("SELECT `first_name` FROM `test_model`;").
+				mock.ExpectQuery("SELECT `first_name` FROM `test_model` WHERE `id` = ?;").
+					WithArgs(1).
 					WillReturnRows(rows)
 			},
 			wantVal: func() *string {
@@ -900,14 +906,16 @@ func TestSelector_Get_baseType(t *testing.T) {
 		{
 			name: "res struct ptr",
 			queryRes: func(t *testing.T) any {
-				queryer := NewSelector[TestModel](db).Select(C("FirstName"), C("Age"))
+				queryer := NewSelector[TestModel](db).Select(C("FirstName"), C("Age")).
+					Where(C("Id").EQ(1))
 				result, err := queryer.Get(context.Background())
 				require.NoError(t, err)
 				return result
 			},
 			mockOrder: func(mock sqlmock.Sqlmock) {
 				rows := mock.NewRows([]string{"first_name", "age"}).AddRow("Da", 18)
-				mock.ExpectQuery("SELECT `first_name`,`age` FROM `test_model`;").
+				mock.ExpectQuery("SELECT `first_name`,`age` FROM `test_model` WHERE `id` = ?;").
+					WithArgs(1).
 					WillReturnRows(rows)
 			},
 			wantVal: func() *TestModel {
@@ -917,6 +925,28 @@ func TestSelector_Get_baseType(t *testing.T) {
 				}
 			}(),
 		},
+		//// time
+		//{
+		//	name: "res time",
+		//	queryRes: func(t *testing.T) any {
+		//		queryer := NewSelector[time.Time](db).Select(C("CreatedAt")).
+		//			From(TableOf(&TestModel{})).Where(C("Id").EQ(1))
+		//		result, err := queryer.Get(context.Background())
+		//		require.NoError(t, err)
+		//		return result
+		//	},
+		//	mockOrder: func(mock sqlmock.Sqlmock) {
+		//		rows := mock.NewRows([]string{"created_at"}).AddRow([]byte("2022-07-03T22:14:02.973528+08:00"))
+		//		mock.ExpectQuery("SELECT `created_at` FROM `test_model` WHERE `id` = ?;").
+		//			WithArgs(1).
+		//			WillReturnRows(rows)
+		//	},
+		//	wantVal: func() *time.Time {
+		//		target := "2022-07-03 22:14:02"
+		//		t, _ := time.ParseInLocation("20060102150405", target, time.Local)
+		//		return &t
+		//	}(),
+		//},
 	}
 
 	for _, tc := range testCases {

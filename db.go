@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"database/sql/driver"
+	"fmt"
 	"log"
 	"orm/internal/errs"
 	"orm/internal/valuer"
@@ -56,7 +57,7 @@ func (db *DB) Wait() error {
 	for err == driver.ErrBadConn {
 		log.Printf("等待数据库启动...")
 		err = db.db.Ping()
-		time.Sleep(time.Second)
+		time.Sleep(time.Second * 3)
 	}
 	return err
 }
@@ -142,8 +143,10 @@ func (db *DB) Close() error {
 func Open(driver string, dsn string, opts ...DBOption) (*DB, error) {
 	db, err := sql.Open(driver, dsn)
 	if err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
+	fmt.Println(driver)
 	return OpenDB(driver, db, opts...)
 }
 

@@ -61,11 +61,11 @@ func TestModelWithTableName(t *testing.T) {
 		wantErr       error
 	}{
 		{
-			// 没有对空字符串进行校验
+			// 我们没有对空字符串进行校验
 			name:          "empty string",
 			val:           &TestModel{},
 			opt:           WithTableName(""),
-			wantTableName: "test_model",
+			wantTableName: "",
 		},
 		{
 			name:          "table name",
@@ -74,7 +74,8 @@ func TestModelWithTableName(t *testing.T) {
 			wantTableName: "test_model_t",
 		},
 	}
-	r := NewRegistry()
+
+	r := NewRegistry().(*registry)
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			m, err := r.Register(tc.val, tc.opt)

@@ -22,44 +22,34 @@ func (i *InsertTestSuite) TearDownTest() {
 	require.NoError(i.T(), res.Err())
 }
 
-func (i *InsertTestSuite) TestGet() {
+func (i *InsertTestSuite) TestInsert() {
 	testCases := []struct {
 		name         string
 		i            *orm.Inserter[test.SimpleStruct]
-		wantErr      error
 		rowsAffected int64
-		wantData     *test.SimpleStruct
+		wantErr      error
 	}{
 		{
-			name: "id only",
-			i: orm.NewInserter[test.SimpleStruct](i.db).
-				Values(&test.SimpleStruct{Id: 1}),
+			name:         "id only",
+			i:            orm.NewInserter[test.SimpleStruct](i.db).Values(&test.SimpleStruct{Id: 1}),
 			rowsAffected: 1,
-			wantErr:      orm.ErrNoRows,
-			wantData:     &test.SimpleStruct{Id: 1},
 		},
 		{
-			name: "all field",
-			i: orm.NewInserter[test.SimpleStruct](i.db).
-				Values(test.NewSimpleStruct(2)),
-			wantData: test.NewSimpleStruct(2),
+			name:         "all field",
+			i:            orm.NewInserter[test.SimpleStruct](i.db).Values(test.NewSimpleStruct(2)),
+			rowsAffected: 1,
 		},
 	}
-
 	for _, tc := range testCases {
 		i.T().Run(tc.name, func(t *testing.T) {
 			res := tc.i.Exec(context.Background())
-			affected, err := res.RowsAffected()
-			assert.Equal(t, tc.wantErr, err)
-			if err != nil {
+			assert.Equal(t, tc.wantErr, res.Err())
+			if res.Err() != nil {
 				return
 			}
-			assert.Equal(t, tc.rowsAffected, affected)
-			data, err := orm.NewSelector[test.SimpleStruct](i.db).
-				Where(orm.C("Id").EQ(tc.wantData.Id)).
-				Get(context.Background())
+			affected, err := res.RowsAffected()
 			require.NoError(t, err)
-			assert.Equal(t, tc.wantData, data)
+			assert.Equal(t, tc.rowsAffected, affected)
 		})
 	}
 }

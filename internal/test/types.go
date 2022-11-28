@@ -23,16 +23,16 @@ import (
 	"github.com/gotomicro/ekit"
 )
 
-// SimpleStruct 包含所有支持的类型
+// SimpleStruct 包含所有 orm 支持的类型
 type SimpleStruct struct {
-	Id      uint64
+	Id      uint64 `eorm:"primary_key,column=int_c"`
 	Bool    bool
 	BoolPtr *bool
 
 	Int    int
 	IntPtr *int
 
-	Int8    int8
+	Int8    int8 `eorm:"primary_key,column=int8_c"`
 	Int8Ptr *int8
 
 	Int16    int16
@@ -65,11 +65,12 @@ type SimpleStruct struct {
 	Float64    float64
 	Float64Ptr *float64
 
-	//Byte      byte
-	//BytePtr   *byte
+	// Byte byte
+	// BytePtr *byte
 	ByteArray []byte
 
 	String string
+	//TimePtr *time.Time
 
 	// 特殊类型
 	NullStringPtr *sql.NullString
@@ -77,7 +78,7 @@ type SimpleStruct struct {
 	NullInt32Ptr  *sql.NullInt32
 	NullInt64Ptr  *sql.NullInt64
 	NullBoolPtr   *sql.NullBool
-	// NullTimePtr    *sql.NullTime
+	//NullTimePtr    *sql.NullTime
 	NullFloat64Ptr *sql.NullFloat64
 	JsonColumn     *JsonColumn
 }
@@ -163,10 +164,17 @@ func NewSimpleStruct(id uint64) *SimpleStruct {
 		Float32Ptr: ekit.ToPtr[float32](-3.2),
 		Float64:    6.4,
 		Float64Ptr: ekit.ToPtr[float64](-6.4),
-		//Byte:           byte(8),
-		//BytePtr:        ekit.ToPtr[byte](18),
-		ByteArray:      []byte("hello"),
-		String:         "world",
+		ByteArray:  []byte("hello"),
+		String:     "world",
+		//TimePtr: func() *time.Time {
+		//	tm, _ := time.ParseInLocation("2006-01-02 15:04:05", "2022-11-28 08:15:11", time.Local)
+		//	return &tm
+		//}(),
+		//NullTimePtr: &sql.NullTime{
+		//	Time: func() time.Time {
+		//		tm, _ := time.ParseInLocation("2006-01-02 15:04:05", "2022-11-28 08:15:11", time.Local)
+		//		return tm
+		//	}(), Valid: true},
 		NullStringPtr:  &sql.NullString{String: "null string", Valid: true},
 		NullInt16Ptr:   &sql.NullInt16{Int16: 16, Valid: true},
 		NullInt32Ptr:   &sql.NullInt32{Int32: 32, Valid: true},

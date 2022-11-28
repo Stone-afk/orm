@@ -146,8 +146,19 @@ func (u *Union) UnionAll(q QueryBuilder) *Union {
 	}
 }
 
+func (s *Selector[T]) buildAllColumns() {
+	for i, field := range s.model.Fields {
+		if i > 0 {
+			s.writeComma()
+		}
+		// it should never return error, we can safely ignore it
+		_ = s.buildColumn(Column{name: field.ColName}, false)
+	}
+}
+
 func (s *Selector[T]) buildColumns() error {
 	if len(s.columns) == 0 {
+		//s.buildAllColumns()
 		s.writeByte('*')
 		return nil
 	}

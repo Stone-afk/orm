@@ -19,6 +19,12 @@ func (s *supportBasicTypeValue) Field(name string) (any, error) {
 func (s *supportBasicTypeValue) SetColumns(rows *sql.Rows) error {
 	switch s.valType.Elem().Kind() {
 	case reflect.Struct:
+		if scanner, ok := s.val.(sql.Scanner); ok {
+			return rows.Scan(scanner)
+		}
+		//if tm, ok := s.val.(*time.Time); ok {
+		//	return rows.Scan(tm)
+		//}
 		return s.Value.SetColumns(rows)
 	default:
 		return rows.Scan(s.val)

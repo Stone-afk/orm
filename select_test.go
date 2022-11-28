@@ -1113,7 +1113,7 @@ func TestSelector_GetMulti(t *testing.T) {
 		}
 	}
 
-	db, err := OpenDB(mockDB)
+	db, err := OpenDB("MySQL", mockDB)
 	require.NoError(t, err)
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {

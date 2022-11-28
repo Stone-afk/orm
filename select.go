@@ -290,7 +290,7 @@ func (s *Selector[T]) Build() (*Query, error) {
 	defer bytebufferpool.Put(s.buffer)
 	var err error
 	if s.model == nil {
-		t := s.TableTypOf()
+		t := s.TableOf()
 		s.model, err = s.r.Get(t)
 		if err != nil {
 			return nil, err
@@ -352,7 +352,7 @@ func (s *Selector[T]) Build() (*Query, error) {
 
 func (s *Selector[T]) Get(ctx context.Context) (*T, error) {
 	if s.model == nil {
-		t := s.TableTypOf()
+		t := s.TableOf()
 		m, err := s.r.Get(t)
 		if err != nil {
 			return nil, err
@@ -390,7 +390,7 @@ func (s *Selector[T]) GetMulti(ctx context.Context) ([]*T, error) {
 	return res.Result.([]*T), nil
 }
 
-func (s *Selector[T]) TableTypOf() any {
+func (s *Selector[T]) TableOf() any {
 	switch tab := s.table.(type) {
 	case Table:
 		return tab.entity

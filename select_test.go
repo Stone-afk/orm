@@ -958,6 +958,93 @@ func TestSelector_Get_baseType(t *testing.T) {
 	}
 }
 
+//测试多条语句
+func TestSelector_GetMulti(t *testing.T) {
+
+	mockDB, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	testCases := []struct {
+		name     string
+		query    string
+		mockErr  error
+		mockRows *sqlmock.Rows
+		wantErr  error
+		wantVal  []*TestModel
+	}{
+		{
+			name:    "multi row",
+			query:   "SELECT .*",
+			mockErr: nil,
+			mockRows: func() *sqlmock.Rows {
+				rows := sqlmock.NewRows([]string{"id", "first_name", "age", "last_name"})
+				rows.AddRow([]byte("123"), []byte("Ming"), []byte("18"), []byte("Deng"))
+				rows.AddRow([]byte("456"), []byte("Min"), []byte("19"), []byte("Da"))
+				return rows
+			}(),
+			wantVal: []*TestModel{
+				{
+					Id:        123,
+					FirstName: "Ming",
+					Age:       18,
+					LastName:  &sql.NullString{Valid: true, String: "Deng"},
+				},
+				{
+					Id:        456,
+					FirstName: "Min",
+					Age:       19,
+					LastName:  &sql.NullString{Valid: true, String: "Da"},
+				},
+			},
+		},
+
+		{
+			name:    "invalid columns",
+			query:   "SELECT .*",
+			mockErr: nil,
+			mockRows: func() *sqlmock.Rows {
+				rows := sqlmock.NewRows([]string{"id", "first_name", "gender"})
+				rows.AddRow([]byte("123"), []byte("Ming"), []byte("male"))
+				return rows
+			}(),
+			wantErr: errs.NewErrUnknownColumn("gender"),
+		},
+
+		{
+			name:    "more columns",
+			query:   "SELECT .*",
+			mockErr: nil,
+			mockRows: func() *sqlmock.Rows {
+				rows := sqlmock.NewRows([]string{"id", "first_name", "age", "last_name", "first_name"})
+				rows.AddRow([]byte("123"), []byte("Ming"), []byte("18"), []byte("Deng"), []byte("明明"))
+				return rows
+			}(),
+			wantErr: errs.ErrTooManyReturnedColumns,
+		},
+	}
+
+	for _, tc := range testCases {
+		if tc.mockErr != nil {
+			mock.ExpectQuery(tc.query).WillReturnError(tc.mockErr)
+		} else {
+			mock.ExpectQuery(tc.query).WillReturnRows(tc.mockRows)
+		}
+	}
+
+	db, err := OpenDB(mockDB)
+	require.NoError(t, err)
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			res, err := NewSelector[TestModel](db).GetMulti(context.Background())
+			assert.Equal(t, tt.wantErr, err)
+			if err != nil {
+				return
+			}
+
+			assert.Equal(t, tt.wantVal, res)
+		})
+	}
+}
+
 func TestSelector_Get(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {

@@ -1,10 +1,12 @@
 package model
 
 import (
+	"database/sql"
 	"orm/internal/errs"
 	"reflect"
 	"strings"
 	"sync"
+	"time"
 	"unicode"
 )
 
@@ -58,6 +60,12 @@ func (r *registry) initModel() {
 func (r *registry) Get(val any) (*Model, error) {
 	if val == nil {
 		return nil, errs.ErrInputNil
+	}
+	if _, ok := val.(sql.Scanner); ok {
+		return nil, errs.ErrRegisterType
+	}
+	if _, ok := val.(*time.Time); ok {
+		return nil, errs.ErrRegisterType
 	}
 	r.lock.RLock()
 	typ := reflect.TypeOf(val)
@@ -127,7 +135,6 @@ func (r *registry) parseTag(tag reflect.StructTag) (map[string]string, error) {
 }
 
 func (r *registry) parseModel(val any) (*Model, error) {
-
 	typ := reflect.TypeOf(val)
 	if typ.Kind() != reflect.Ptr || typ.Elem().Kind() != reflect.Struct {
 		return nil, errs.ErrPointerOnly

@@ -123,7 +123,7 @@ type TestModel struct {
 	FirstName string
 	Age       int8
 	LastName  *sql.NullString
-	CreatedAt *time.Time
+	// CreatedAt *time.Time
 }
 
 func (TestModel) CreateSQL() string {

@@ -17,6 +17,7 @@ var (
 	ErrTooManyReturnedColumns = errors.New("orm: 过多列")
 	ErrInsertZeroRow          = errors.New("orm: 插入 0 行")
 	ErrNoUpdatedColumns       = errors.New("orm: 未指定更新的列")
+	ErrRegisterType           = errors.New("orm: 不支持的注册类型")
 )
 
 func NewErrFailToRollbackTx(bizErr error, rbErr error, panicked bool) error {

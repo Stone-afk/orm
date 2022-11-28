@@ -372,7 +372,7 @@ func (s *Selector[T]) Get(ctx context.Context) (*T, error) {
 
 func (s *Selector[T]) GetMulti(ctx context.Context) ([]*T, error) {
 	if s.model == nil {
-		t := s.TableTypOf()
+		t := s.TableOf()
 		m, err := s.r.Get(t)
 		if err != nil {
 			return nil, err

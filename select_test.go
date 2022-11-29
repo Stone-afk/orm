@@ -722,7 +722,7 @@ func TestSelector_Build(t *testing.T) {
 	}
 }
 
-func Test_GetMulti_baseType(t *testing.T) {
+func TestSelector_GetMulti_baseType(t *testing.T) {
 	mockDB, mock, err := sqlmock.New(
 		sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 	if err != nil {

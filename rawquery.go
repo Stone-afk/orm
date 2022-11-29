@@ -1,6 +1,8 @@
 package orm
 
-import "context"
+import (
+	"context"
+)
 
 var _ Querier[any] = &RawQuerier[any]{}
 
@@ -32,9 +34,14 @@ func (r *RawQuerier[T]) Build() (*Query, error) {
 }
 
 func (r *RawQuerier[T]) Get(ctx context.Context) (*T, error) {
+	//  当通过 RawQuery 方法调用 Get ,如果 T 是 time.Time, sql.Scanner 的实现，
+	//  内置类型或者基本类型时， 在这里都会报错，但是这种情况我们认为是可以接受的
+	//  所以在此将报错忽略，因为基本类型取值用不到 meta 里的数据
+	model, _ := r.r.Get(new(T))
 	res := get[T](ctx, r.core, r.sess, &QueryContext{
 		Builder: r,
 		Type:    "RAW",
+		Meta:    model,
 	})
 	if res.Err != nil {
 		return nil, res.Err
@@ -43,9 +50,14 @@ func (r *RawQuerier[T]) Get(ctx context.Context) (*T, error) {
 }
 
 func (r *RawQuerier[T]) GetMulti(ctx context.Context) ([]*T, error) {
+	//  当通过 RawQuery 方法调用 Get ,如果 T 是 time.Time, sql.Scanner 的实现，
+	//  内置类型或者基本类型时， 在这里都会报错，但是这种情况我们认为是可以接受的
+	//  所以在此将报错忽略，因为基本类型取值用不到 meta 里的数据
+	model, _ := r.r.Get(new(T))
 	res := getMulti[T](ctx, r.core, r.sess, &QueryContext{
 		Builder: r,
 		Type:    "RAW",
+		Meta:    model,
 	})
 	if res.Err != nil {
 		return nil, res.Err

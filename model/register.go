@@ -1,12 +1,10 @@
 package model
 
 import (
-	"database/sql"
 	"orm/internal/errs"
 	"reflect"
 	"strings"
 	"sync"
-	"time"
 	"unicode"
 )
 
@@ -60,12 +58,6 @@ func (r *registry) initModel() {
 func (r *registry) Get(val any) (*Model, error) {
 	if val == nil {
 		return nil, errs.ErrInputNil
-	}
-	if _, ok := val.(sql.Scanner); ok {
-		return nil, errs.ErrRegisterType
-	}
-	if _, ok := val.(*time.Time); ok {
-		return nil, errs.ErrRegisterType
 	}
 	r.lock.RLock()
 	typ := reflect.TypeOf(val)

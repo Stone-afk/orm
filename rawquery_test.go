@@ -35,7 +35,7 @@ func TestRawQuerier_GetMulti(t *testing.T) {
 		{
 			name: "res int",
 			queryRes: func(t *testing.T) any {
-				queryer := NewSelector[int](db).Select(C("Age")).From(TableOf(&TestModel{}))
+				queryer := RawQuery[int](db, "SELECT `age` FROM `test_model`;")
 				result, err := queryer.GetMulti(context.Background())
 				require.NoError(t, err)
 				return result
@@ -54,101 +54,11 @@ func TestRawQuerier_GetMulti(t *testing.T) {
 				return
 			}(),
 		},
-		{
-			name: "res int32",
-			queryRes: func(t *testing.T) any {
-				queryer := NewSelector[int32](db).Select(C("Age")).From(TableOf(&TestModel{}))
-				result, err := queryer.GetMulti(context.Background())
-				require.NoError(t, err)
-				return result
-			},
-			mockOrder: func(mock sqlmock.Sqlmock) {
-				rows := mock.NewRows([]string{"age"}).AddRow(10).
-					AddRow(18).AddRow(22)
-				mock.ExpectQuery("SELECT `age` FROM `test_model`;").
-					WillReturnRows(rows)
-			},
-			wantVal: func() (res []*int32) {
-				vals := []int32{10, 18, 22}
-				for i := 0; i < len(vals); i++ {
-					res = append(res, &vals[i])
-				}
-				return
-			}(),
-		},
-		// int64
-		{
-			name: "avg res int64",
-			queryRes: func(t *testing.T) any {
-				queryer := NewSelector[int64](db).Select(C("Age")).From(TableOf(&TestModel{}))
-				result, err := queryer.GetMulti(context.Background())
-				require.NoError(t, err)
-				return result
-			},
-			mockOrder: func(mock sqlmock.Sqlmock) {
-				rows := mock.NewRows([]string{"age"}).AddRow(10).
-					AddRow(18).AddRow(22)
-				mock.ExpectQuery("SELECT `age` FROM `test_model`;").
-					WillReturnRows(rows)
-			},
-			wantVal: func() (res []*int64) {
-				vals := []int64{10, 18, 22}
-				for i := 0; i < len(vals); i++ {
-					res = append(res, &vals[i])
-				}
-				return
-			}(),
-		},
-		// float32
-		{
-			name: "avg res float32",
-			queryRes: func(t *testing.T) any {
-				queryer := NewSelector[float32](db).Select(C("Age")).From(TableOf(&TestModel{}))
-				result, err := queryer.GetMulti(context.Background())
-				require.NoError(t, err)
-				return result
-			},
-			mockOrder: func(mock sqlmock.Sqlmock) {
-				rows := mock.NewRows([]string{"age"}).AddRow(10.2).AddRow(18.8)
-				mock.ExpectQuery("SELECT `age` FROM `test_model`;").
-					WillReturnRows(rows)
-			},
-			wantVal: func() (res []*float32) {
-				vals := []float32{10.2, 18.8}
-				for i := 0; i < len(vals); i++ {
-					res = append(res, &vals[i])
-				}
-				return
-			}(),
-		},
-		// float64
-		{
-			name: "avg res float64",
-			queryRes: func(t *testing.T) any {
-				queryer := NewSelector[float64](db).Select(C("Age")).From(TableOf(&TestModel{}))
-				result, err := queryer.GetMulti(context.Background())
-				require.NoError(t, err)
-				return result
-			},
-			mockOrder: func(mock sqlmock.Sqlmock) {
-				rows := mock.NewRows([]string{"age"}).AddRow(10.2).AddRow(18.8)
-				mock.ExpectQuery("SELECT `age` FROM `test_model`;").
-					WillReturnRows(rows)
-			},
-			wantVal: func() (res []*float64) {
-				vals := []float64{10.2, 18.8}
-				for i := 0; i < len(vals); i++ {
-					res = append(res, &vals[i])
-				}
-				return
-			}(),
-		},
 		// byte
 		{
 			name: "res byte",
 			queryRes: func(t *testing.T) any {
-				queryer := NewSelector[byte](db).Select(C("FirstName")).
-					From(TableOf(&TestModel{}))
+				queryer := RawQuery[byte](db, "SELECT `first_name` FROM `test_model`;")
 				result, err := queryer.GetMulti(context.Background())
 				require.NoError(t, err)
 				return result
@@ -170,8 +80,7 @@ func TestRawQuerier_GetMulti(t *testing.T) {
 		{
 			name: "res bytes",
 			queryRes: func(t *testing.T) any {
-				queryer := NewSelector[[]byte](db).Select(C("FirstName")).
-					From(TableOf(&TestModel{}))
+				queryer := RawQuery[[]byte](db, "SELECT `first_name` FROM `test_model`;")
 				result, err := queryer.GetMulti(context.Background())
 				require.NoError(t, err)
 				return result
@@ -193,8 +102,7 @@ func TestRawQuerier_GetMulti(t *testing.T) {
 		{
 			name: "res string",
 			queryRes: func(t *testing.T) any {
-				queryer := NewSelector[string](db).Select(C("FirstName")).
-					From(TableOf(&TestModel{}))
+				queryer := RawQuery[string](db, "SELECT `first_name` FROM `test_model`;")
 				result, err := queryer.GetMulti(context.Background())
 				require.NoError(t, err)
 				return result
@@ -216,8 +124,7 @@ func TestRawQuerier_GetMulti(t *testing.T) {
 		{
 			name: "res struct ptr",
 			queryRes: func(t *testing.T) any {
-				queryer := NewSelector[TestModel](db).Select(C("FirstName"), C("Age")).
-					From(TableOf(&TestModel{}))
+				queryer := RawQuery[TestModel](db, "SELECT `first_name`,`age` FROM `test_model`;")
 				result, err := queryer.GetMulti(context.Background())
 				require.NoError(t, err)
 				return result
@@ -243,8 +150,7 @@ func TestRawQuerier_GetMulti(t *testing.T) {
 		{
 			name: "res sql.NullString",
 			queryRes: func(t *testing.T) any {
-				queryer := NewSelector[sql.NullString](db).Select(C("LastName")).
-					From(TableOf(&TestModel{}))
+				queryer := RawQuery[sql.NullString](db, "SELECT `last_name` FROM `test_model`;")
 				result, err := queryer.GetMulti(context.Background())
 				require.NoError(t, err)
 				return result

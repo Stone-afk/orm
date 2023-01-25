@@ -197,11 +197,11 @@ func (r reflectValue) SetColumns(rows *sql.Rows) error {
 
 ```
 
-![image-20230125212233758](C:\Users\canway\AppData\Roaming\Typora\typora-user-images\image-20230125212233758.png)
+![image-20230125212233758](/docs/images/image-20230125212233758.png)
 
 之后，需要做一个小的调整， 因为在 reflectValue 里面维持住 Model， 而 model 是直接在 orm 中维护的，  于是你得到了一个依赖循环引用。
 
-![image-20230125214109997](C:\Users\canway\AppData\Roaming\Typora\typora-user-images\image-20230125214109997.png)
+![image-20230125214109997](/docs/images/image-20230125214109997.png)
 
 要解决循环引用的问题，就得抽取 model。
 
@@ -300,7 +300,7 @@ func OpenDB(db *sql.DB, opts ...DBOption) (*DB, error) {
 - reflect.NewAt 在特定地址创建对象 
 - 调用 Scan
 
-![image-20230125213107371](C:\Users\canway\AppData\Roaming\Typora\typora-user-images\image-20230125213107371.png)
+![image-20230125213107371](/docs/images/image-20230125213107371.png)
 
 
 
@@ -429,7 +429,7 @@ func (u unsafeValue) SetColumns(rows *sql.Rows) error {
 
 方案二：在 Selector 里面维持一个 Creator
 
-![image-20230125224938405](C:\Users\canway\AppData\Roaming\Typora\typora-user-images\image-20230125224938405.png)
+![image-20230125224938405](/docs/images/image-20230125224938405.png)
 
 这里采用方案二，代码如下：
 
@@ -867,7 +867,7 @@ func BenchmarkQuerier_Get(b *testing.B) {
 
 **unsafe 和反射对比**
 
-![image-20230125230332527](C:\Users\canway\AppData\Roaming\Typora\typora-user-images\image-20230125230332527.png)
+![image-20230125230332527](/docs/images/image-20230125230332527.png)
 
 ### 总结
 

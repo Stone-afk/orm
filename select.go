@@ -105,20 +105,51 @@ func (s *Selector[T]) AsSubquery(alias string) Subquery {
 }
 
 type Union struct {
+	Builder
 	left  QueryBuilder
 	typ   string
 	right QueryBuilder
 }
 
 func (u *Union) Build() (*Query, error) {
+	leftQuery, err := u.left.Build()
+	if err != nil {
+		return nil, err
+	}
+	rightQuery, err := u.right.Build()
+	if err != nil {
+		return nil, err
+	}
+	if leftQuery.SQL != "" {
+		u.writeLeftParenthesis()
+		u.writeString(leftQuery.SQL[:len(leftQuery.SQL)-1])
+		u.writeRightParenthesis()
+	}
+
+	if u.typ != "" {
+		u.writeString(u.typ)
+	}
+
+	if rightQuery.SQL != "" {
+		u.writeLeftParenthesis()
+		u.writeString(rightQuery.SQL[:len(rightQuery.SQL)-1])
+		u.writeRightParenthesis()
+	}
 	return &Query{}, nil
 }
 
 func (s *Selector[T]) Union(q QueryBuilder) *Union {
+	s.writeLeftParenthesis()
 	return &Union{
 		left:  s,
 		typ:   "UNION",
 		right: q,
+		Builder: Builder{
+			core:     s.core,
+			buffer:   bytebufferpool.Get(),
+			aliasMap: make(map[string]int, 8),
+			quoter:   s.quoter,
+		},
 	}
 }
 
@@ -127,6 +158,12 @@ func (s *Selector[T]) UnionAll(q QueryBuilder) *Union {
 		left:  s,
 		typ:   "UNION ALL",
 		right: q,
+		Builder: Builder{
+			core:     s.core,
+			buffer:   bytebufferpool.Get(),
+			aliasMap: make(map[string]int, 8),
+			quoter:   s.quoter,
+		},
 	}
 }
 
@@ -135,6 +172,12 @@ func (u *Union) Union(q QueryBuilder) *Union {
 		left:  u,
 		typ:   "UNION",
 		right: q,
+		Builder: Builder{
+			core:     u.core,
+			buffer:   bytebufferpool.Get(),
+			aliasMap: make(map[string]int, 8),
+			quoter:   u.quoter,
+		},
 	}
 }
 
@@ -143,6 +186,12 @@ func (u *Union) UnionAll(q QueryBuilder) *Union {
 		left:  u,
 		typ:   "UNION ALL",
 		right: q,
+		Builder: Builder{
+			core:     u.core,
+			buffer:   bytebufferpool.Get(),
+			aliasMap: make(map[string]int, 8),
+			quoter:   u.quoter,
+		},
 	}
 }
 

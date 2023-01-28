@@ -124,6 +124,7 @@ func (u *Union) Build() (*Query, error) {
 		u.writeLeftParenthesis()
 		u.writeString(leftQuery.SQL[:len(leftQuery.SQL)-1])
 		u.writeRightParenthesis()
+		u.addArgs(leftQuery.Args...)
 	}
 
 	if u.typ != "" {
@@ -134,8 +135,12 @@ func (u *Union) Build() (*Query, error) {
 		u.writeLeftParenthesis()
 		u.writeString(rightQuery.SQL[:len(rightQuery.SQL)-1])
 		u.writeRightParenthesis()
+		u.addArgs(rightQuery.Args...)
 	}
-	return &Query{}, nil
+	return &Query{
+		SQL:  u.buffer.String(),
+		Args: u.args,
+	}, nil
 }
 
 func (s *Selector[T]) Union(q QueryBuilder) *Union {

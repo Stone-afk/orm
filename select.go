@@ -121,22 +121,26 @@ func (u *Union) Build() (*Query, error) {
 		return nil, err
 	}
 	if leftQuery.SQL != "" {
-		u.writeLeftParenthesis()
 		u.writeString(leftQuery.SQL[:len(leftQuery.SQL)-1])
-		u.writeRightParenthesis()
+	}
+	if leftQuery.Args != nil && len(leftQuery.Args) != 0 {
 		u.addArgs(leftQuery.Args...)
 	}
 
 	if u.typ != "" {
+		u.writeSpace()
 		u.writeString(u.typ)
+		u.writeSpace()
 	}
 
 	if rightQuery.SQL != "" {
-		u.writeLeftParenthesis()
 		u.writeString(rightQuery.SQL[:len(rightQuery.SQL)-1])
-		u.writeRightParenthesis()
+	}
+	if rightQuery.Args != nil && len(rightQuery.Args) != 0 {
 		u.addArgs(rightQuery.Args...)
 	}
+
+	u.end()
 	return &Query{
 		SQL:  u.buffer.String(),
 		Args: u.args,
@@ -144,7 +148,6 @@ func (u *Union) Build() (*Query, error) {
 }
 
 func (s *Selector[T]) Union(q QueryBuilder) *Union {
-	s.writeLeftParenthesis()
 	return &Union{
 		left:  s,
 		typ:   "UNION",
@@ -397,7 +400,7 @@ func (s *Selector[T]) Build() (*Query, error) {
 		s.addArgs(s.offset)
 	}
 
-	s.writeString(";")
+	s.end()
 	return &Query{
 		SQL:  s.buffer.String(),
 		Args: s.args,

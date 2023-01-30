@@ -13,6 +13,72 @@ import (
 	"testing"
 )
 
+// union
+func TestSelector_Union(t *testing.T) {
+	db := memoryDB(t)
+	type Order struct {
+		Id        int
+		UsingCol1 string
+		UsingCol2 string
+	}
+	type OrderDetail struct {
+		OrderId int
+		ItemId  int
+	}
+	testCases := []struct {
+		name      string
+		q         QueryBuilder
+		wantQuery *Query
+		wantErr   error
+	}{
+		{
+			name: "union",
+			q: func() QueryBuilder {
+				selector1 := NewSelector[OrderDetail](db)
+				selector2 := NewSelector[Order](db)
+				return selector1.Union(selector2)
+			}(),
+			wantQuery: &Query{
+				SQL: "SELECT * FROM `order_detail` UNION SELECT * FROM `order`;",
+			},
+		},
+		{
+			name: "union all",
+			q: func() QueryBuilder {
+				selector1 := NewSelector[OrderDetail](db)
+				selector2 := NewSelector[Order](db)
+				return selector1.UnionAll(selector2)
+			}(),
+			wantQuery: &Query{
+				SQL: "SELECT * FROM `order_detail` UNION ALL SELECT * FROM `order`;",
+			},
+		},
+		{
+			name: "union where",
+			q: func() QueryBuilder {
+				selector1 := NewSelector[OrderDetail](db).Where(C("OrderId").EQ(1))
+				selector2 := NewSelector[Order](db).Where(C("Id").EQ(2))
+				return selector1.UnionAll(selector2)
+			}(),
+			wantQuery: &Query{
+				SQL:  "SELECT * FROM `order_detail` WHERE `order_id` = ? UNION ALL SELECT * FROM `order` WHERE `id` = ?;",
+				Args: []any{1, 2},
+			},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			query, err := tc.q.Build()
+			assert.Equal(t, tc.wantErr, err)
+			if err != nil {
+				return
+			}
+			assert.Equal(t, tc.wantQuery, query)
+		})
+	}
+
+}
+
 // Join 和 Subquery 混合使用
 func TestSelector_SubqueryAndJoin(t *testing.T) {
 	db := memoryDB(t)

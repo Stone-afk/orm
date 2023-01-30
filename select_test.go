@@ -53,6 +53,18 @@ func TestSelector_Union(t *testing.T) {
 				SQL: "SELECT * FROM `order_detail` UNION ALL SELECT * FROM `order`;",
 			},
 		},
+		{
+			name: "union where",
+			q: func() QueryBuilder {
+				selector1 := NewSelector[OrderDetail](db).Where(C("OrderId").EQ(1))
+				selector2 := NewSelector[Order](db).Where(C("Id").EQ(2))
+				return selector1.UnionAll(selector2)
+			}(),
+			wantQuery: &Query{
+				SQL:  "SELECT * FROM `order_detail` WHERE `order_id` = ? UNION ALL SELECT * FROM `order` WHERE `id` = ?;",
+				Args: []any{1, 2},
+			},
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {

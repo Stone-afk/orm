@@ -25,6 +25,11 @@ func TestSelector_Union(t *testing.T) {
 		OrderId int
 		ItemId  int
 	}
+	type Pay struct {
+		Id      int
+		OrderId int
+		Price   int
+	}
 	testCases := []struct {
 		name      string
 		q         QueryBuilder
@@ -58,6 +63,18 @@ func TestSelector_Union(t *testing.T) {
 			q: func() QueryBuilder {
 				selector1 := NewSelector[OrderDetail](db).Where(C("OrderId").EQ(1))
 				selector2 := NewSelector[Order](db).Where(C("Id").EQ(2))
+				return selector1.Union(selector2)
+			}(),
+			wantQuery: &Query{
+				SQL:  "SELECT * FROM `order_detail` WHERE `order_id` = ? UNION SELECT * FROM `order` WHERE `id` = ?;",
+				Args: []any{1, 2},
+			},
+		},
+		{
+			name: "union where all",
+			q: func() QueryBuilder {
+				selector1 := NewSelector[OrderDetail](db).Where(C("OrderId").EQ(1))
+				selector2 := NewSelector[Order](db).Where(C("Id").EQ(2))
 				return selector1.UnionAll(selector2)
 			}(),
 			wantQuery: &Query{
@@ -65,6 +82,48 @@ func TestSelector_Union(t *testing.T) {
 				Args: []any{1, 2},
 			},
 		},
+		{
+			name: "union join ",
+			q: func() QueryBuilder {
+				t1 := TableOf(&Order{}).As("t1")
+				t2 := TableOf(&OrderDetail{}).As("t2")
+				selector1 := NewSelector[Order](db).From(t1.Join(t2).On(t1.C("Id").EQ(t2.C("OrderId"))))
+
+				selector2 := NewSelector[Pay](db).Select().Where(C("Price").EQ(3))
+				return selector1.Union(selector2)
+			}(),
+			wantQuery: &Query{
+				SQL:  "SELECT * FROM (`order` AS `t1` JOIN `order_detail` AS `t2` ON `t1`.`id` = `t2`.`order_id`) UNION SELECT * FROM `pay` WHERE `price` = ?;",
+				Args: []any{3},
+			},
+		},
+		{
+			name: "union subquery ",
+			q: func() QueryBuilder {
+				sub := NewSelector[OrderDetail](db).Select(C("OrderId")).AsSubquery("sub")
+				selector1 := NewSelector[Order](db).Where(C("Id").In(sub))
+				selector2 := NewSelector[Pay](db).Select().Where(C("Price").EQ(3))
+				return selector1.Union(selector2)
+			}(),
+			wantQuery: &Query{
+				SQL:  "SELECT * FROM `order` WHERE `id` IN (SELECT `order_id` FROM `order_detail`) UNION SELECT * FROM `pay` WHERE `price` = ?;",
+				Args: []any{3},
+			},
+		},
+		//{
+		//	name: "subquery union",
+		//	q: func() QueryBuilder {
+		//		sub := NewSelector[OrderDetail](db).Select(C("OrderId")).AsSubquery("sub")
+		//		selector1 := NewSelector[Order](db).Where(C("Id").In(sub))
+		//		selector2 := NewSelector[Pay](db).Select().Where(C("Price").EQ(3))
+		//		sub = selector1.Union(selector2).AsSubquery("sub2")
+		//		return NewSelector[Order](db).From(sub)
+		//	}(),
+		//	wantQuery: &Query{
+		//		SQL:  "SELECT * FROM (SELECT * FROM `order` WHERE `id` IN (SELECT `order_id` FROM `order_detail`) UNION SELECT * FROM `pay` WHERE `price` = ?) AS `sub2`;",
+		//		Args: []any{3},
+		//	},
+		//},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {

@@ -7,6 +7,7 @@ type TableReference interface {
 var _ TableReference = Table{}
 var _ TableReference = Join{}
 var _ TableReference = Subquery{}
+var _ TableReference = &Union{}
 
 type Table struct {
 	entity any

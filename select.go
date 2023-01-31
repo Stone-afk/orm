@@ -6,6 +6,116 @@ import (
 	"orm/internal/errs"
 )
 
+type Union struct {
+	Builder
+	left  QueryBuilder
+	typ   string
+	right QueryBuilder
+}
+
+func (u *Union) tableAlias() string {
+	return ""
+}
+
+func (u *Union) AsSubquery(alias string) Subquery {
+	return Subquery{
+		s:     u,
+		alias: alias,
+	}
+}
+
+func (u *Union) Build() (*Query, error) {
+	leftQuery, err := u.left.Build()
+	if err != nil {
+		return nil, err
+	}
+	rightQuery, err := u.right.Build()
+	if err != nil {
+		return nil, err
+	}
+	if leftQuery.SQL != "" {
+		u.writeString(leftQuery.SQL[:len(leftQuery.SQL)-1])
+	}
+	if leftQuery.Args != nil && len(leftQuery.Args) != 0 {
+		u.addArgs(leftQuery.Args...)
+	}
+
+	if u.typ != "" {
+		u.writeSpace()
+		u.writeString(u.typ)
+		u.writeSpace()
+	}
+
+	if rightQuery.SQL != "" {
+		u.writeString(rightQuery.SQL[:len(rightQuery.SQL)-1])
+	}
+	if rightQuery.Args != nil && len(rightQuery.Args) != 0 {
+		u.addArgs(rightQuery.Args...)
+	}
+
+	u.end()
+	return &Query{
+		SQL:  u.buffer.String(),
+		Args: u.args,
+	}, nil
+}
+
+func (s *Selector[T]) Union(q QueryBuilder) *Union {
+	return &Union{
+		left:  s,
+		typ:   "UNION",
+		right: q,
+		Builder: Builder{
+			core:     s.core,
+			buffer:   bytebufferpool.Get(),
+			aliasMap: make(map[string]int, 8),
+			quoter:   s.quoter,
+		},
+	}
+}
+
+func (s *Selector[T]) UnionAll(q QueryBuilder) *Union {
+	return &Union{
+		left:  s,
+		typ:   "UNION ALL",
+		right: q,
+		Builder: Builder{
+			core:     s.core,
+			buffer:   bytebufferpool.Get(),
+			aliasMap: make(map[string]int, 8),
+			quoter:   s.quoter,
+		},
+	}
+}
+
+func (u *Union) Union(q QueryBuilder) *Union {
+	return &Union{
+		left:  u,
+		typ:   "UNION",
+		right: q,
+		Builder: Builder{
+			core:     u.core,
+			buffer:   bytebufferpool.Get(),
+			aliasMap: make(map[string]int, 8),
+			quoter:   u.quoter,
+		},
+	}
+}
+
+func (u *Union) UnionAll(q QueryBuilder) *Union {
+	return &Union{
+		left:  u,
+		typ:   "UNION ALL",
+		right: q,
+		Builder: Builder{
+			core:     u.core,
+			buffer:   bytebufferpool.Get(),
+			aliasMap: make(map[string]int, 8),
+			quoter:   u.quoter,
+		},
+	}
+}
+
 // Selector 用于构造 SELECT 语句
 type Selector[T any] struct {
 	Builder
@@ -101,105 +211,6 @@ func (s *Selector[T]) AsSubquery(alias string) Subquery {
 		alias:   alias,
 		columns: s.columns,
 		table:   table,
-	}
-}
-
-type Union struct {
-	Builder
-	left  QueryBuilder
-	typ   string
-	right QueryBuilder
-}
-
-func (u *Union) Build() (*Query, error) {
-	leftQuery, err := u.left.Build()
-	if err != nil {
-		return nil, err
-	}
-	rightQuery, err := u.right.Build()
-	if err != nil {
-		return nil, err
-	}
-	if leftQuery.SQL != "" {
-		u.writeString(leftQuery.SQL[:len(leftQuery.SQL)-1])
-	}
-	if leftQuery.Args != nil && len(leftQuery.Args) != 0 {
-		u.addArgs(leftQuery.Args...)
-	}
-
-	if u.typ != "" {
-		u.writeSpace()
-		u.writeString(u.typ)
-		u.writeSpace()
-	}
-
-	if rightQuery.SQL != "" {
-		u.writeString(rightQuery.SQL[:len(rightQuery.SQL)-1])
-	}
-	if rightQuery.Args != nil && len(rightQuery.Args) != 0 {
-		u.addArgs(rightQuery.Args...)
-	}
-
-	u.end()
-	return &Query{
-		SQL:  u.buffer.String(),
-		Args: u.args,
-	}, nil
-}
-
-func (s *Selector[T]) Union(q QueryBuilder) *Union {
-	return &Union{
-		left:  s,
-		typ:   "UNION",
-		right: q,
-		Builder: Builder{
-			core:     s.core,
-			buffer:   bytebufferpool.Get(),
-			aliasMap: make(map[string]int, 8),
-			quoter:   s.quoter,
-		},
-	}
-}
-
-func (s *Selector[T]) UnionAll(q QueryBuilder) *Union {
-	return &Union{
-		left:  s,
-		typ:   "UNION ALL",
-		right: q,
-		Builder: Builder{
-			core:     s.core,
-			buffer:   bytebufferpool.Get(),
-			aliasMap: make(map[string]int, 8),
-			quoter:   s.quoter,
-		},
-	}
-}
-
-func (u *Union) Union(q QueryBuilder) *Union {
-	return &Union{
-		left:  u,
-		typ:   "UNION",
-		right: q,
-		Builder: Builder{
-			core:     u.core,
-			buffer:   bytebufferpool.Get(),
-			aliasMap: make(map[string]int, 8),
-			quoter:   u.quoter,
-		},
-	}
-}
-
-func (u *Union) UnionAll(q QueryBuilder) *Union {
-	return &Union{
-		left:  u,
-		typ:   "UNION ALL",
-		right: q,
-		Builder: Builder{
-			core:     u.core,
-			buffer:   bytebufferpool.Get(),
-			aliasMap: make(map[string]int, 8),
-			quoter:   u.quoter,
-		},
 	}
 }
 
